@@ -5,7 +5,9 @@ pipeline {
 		stage('Build') {
 
 			steps {
-				echo "I am building the project"
+				echo "Cloning the Git Repo"
+
+				git "https://github.com/calvinrodrigues500/ph-bookings-appointments-woocommerce-premium"
 			}
 		}
 
