@@ -7,8 +7,8 @@ pipeline {
 			steps {
 				echo "Cloning the Git Repo"
 
-				git credentialsId: "cal-git-credentials", url: "https://github.com/calvinrodrigues500/ph-bookings-appointments-woocommerce-premium"
-
+				git credentialsId: 'cal-git-credentials',
+				url: "https://github.com/calvinrodrigues500/ph-bookings-appointments-woocommerce-premium.git"
 			}
 		}
 
