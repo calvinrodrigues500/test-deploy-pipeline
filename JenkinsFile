@@ -22,6 +22,13 @@ pipeline {
 		stage('Deploy') {
 
 			steps {
+				
+				echo "Zipping the folder";
+				
+				sh "pwd"
+				
+				sh "zip -r ph-bookings-and-appointments-plugin.zip ."
+				
 				echo "I am deploying the project"
 			}
 		}
