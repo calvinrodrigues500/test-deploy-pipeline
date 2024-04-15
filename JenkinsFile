@@ -80,9 +80,9 @@ pipeline {
                     
                     env.WORKSPACE = output
                     sh(returnStdout: true, script: "chmod -R 755 ${env.WORKSPACE}")
-				    sh(returnStdout: true, script: "/vendor/bin/phpcs --standard=WordPress ${env.WORKSPACE}/ups-woocommerce-shipping")
+				    sh(returnStdout: true, script: "/vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`")
 
-					sh "phpcs --standard=WordPress ${env.WORKSPACE}"
+					// sh "phpcs --standard=WordPress ${env.WORKSPACE}"
                 }
 				slackSend color: "good", message: "Message from Jenkins Pipeline ${env.WORKSPACE}"
 			}
