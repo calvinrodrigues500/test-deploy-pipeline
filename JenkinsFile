@@ -1,3 +1,56 @@
+// pipeline {
+// 	agent any
+	
+// 	stages {
+// 		stage('Build') {
+
+// 			steps {
+// 				echo "Cloning the Git Repo"
+
+// 				git branch: params.RELEASE_BRANCH,
+// 				credentialsId: 'cal-git-credentials',
+// 				url: params.REPO_URL
+// 			}
+// 		}
+
+// 		stage('Testing') {
+
+// 			steps {
+// 				echo "I am testing the project"
+// 			}
+// 		}
+
+// 		stage('Preparing for deploy') {
+
+// 			steps {
+				
+// 				echo "Zipping the folder";
+				
+// 				sh "pwd"
+				
+// 				sh "zip -r ph-bookings-and-appointments-plugin.zip ."
+				
+// 				echo "I am deploying the project"
+// 			}
+// 		}
+		
+// 		stage('Deploying to AWS S3') {
+		    
+// 		    steps {
+		        
+// 		        echo 'Deploying to AWS S3';
+		        
+// 		      //  sh "aws s3 cp ph-bookings-and-appointments-plugin.zip s3://ph-premium-plugins/"
+
+// 			//   sh "aws s3 presign s3://ph-premium-plugins/ph-bookings-and-appointments-plugin.zip"
+		        
+// 		        echo "Successfully uploaded the zip";
+// 		    }
+// 		}
+// 	}
+// }
+
+
 pipeline {
 	agent any
 	
@@ -7,8 +60,9 @@ pipeline {
 			steps {
 				echo "Cloning the Git Repo"
 
-				git credentialsId: 'cal-git-credentials',
-				url: "https://github.com/calvinrodrigues500/ph-bookings-appointments-woocommerce-premium.git"
+				git branch: 'master',
+				credentialsId: 'bitbucket-credentials',
+				url: 'git@bitbucket.org:xadapter-cyd/ups-woocommerce-shipping.git'
 			}
 		}
 
@@ -16,21 +70,48 @@ pipeline {
 
 			steps {
 				echo "I am testing the project"
+				sh "php -v"
+				
+				sh "pwd"
+				
+				 script {
+                    def output = sh(returnStdout: true, script: 'pwd')
+                    echo "Output: ${output}"
+                    
+                    env.WORKSPACE = output
+                    sh(returnStdout: true, script: "chmod -R 755 ${env.WORKSPACE}")
+				    sh(returnStdout: true, script: "${env.WORKSPACE}/vendor/bin/phpcs --standard=WordPress ${env.WORKSPACE}/ups-woocommerce-shipping")
+                }
+				slackSend color: "good", message: "Message from Jenkins Pipeline ${env.WORKSPACE}"
 			}
 		}
 
-		stage('Deploy') {
+		stage('Preparing for deploy') {
 
 			steps {
 				
 				echo "Zipping the folder";
 				
-				sh "pwd"
+				// sh "pwd"
 				
-				sh "zip -r ph-bookings-and-appointments-plugin.zip ."
+				// sh "zip -r ph-bookings-and-appointments-plugin.zip ."
 				
-				echo "I am deploying the project"
+				// echo "I am deploying the project"
 			}
+		}
+		
+		stage('Deploying to AWS S3') {
+		    
+		    steps {
+		        
+		        echo 'Deploying to AWS S3';
+		        
+		      //  sh "aws s3 cp ph-bookings-and-appointments-plugin.zip s3://ph-premium-plugins/"
+
+			//   sh "aws s3 presign s3://ph-premium-plugins/ph-bookings-and-appointments-plugin.zip"
+		        
+		        echo "Successfully uploaded the zip";
+		    }
 		}
 	}
 }
