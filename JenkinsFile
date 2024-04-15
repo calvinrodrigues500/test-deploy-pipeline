@@ -73,18 +73,21 @@ pipeline {
 				sh "php -v"
 				
 				sh "pwd"
-				
-				 script {
-                    def output = sh(returnStdout: true, script: 'pwd')
-                    echo "Output: ${output}"
-                    
-                    env.WORKSPACE = output
-                    // sh(returnStdout: true, script: "chmod -R 755 ${env.WORKSPACE}")
-					// sh "chmod +x -R ${env.WORKSPACE}"
-				    sh "sudo /vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`"
 
-					// sh "phpcs --standard=WordPress ${env.WORKSPACE}"
-                }
+				sh "/vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`"
+				
+				
+				//  script {
+                //     def output = sh(returnStdout: true, script: 'pwd')
+                //     echo "Output: ${output}"
+                    
+                //     env.WORKSPACE = output
+                //     // sh(returnStdout: true, script: "chmod -R 755 ${env.WORKSPACE}")
+				// 	// sh "chmod +x -R ${env.WORKSPACE}"
+				//     sh "sudo /vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`"
+
+				// 	// sh "phpcs --standard=WordPress ${env.WORKSPACE}"
+                // }
 				slackSend color: "good", message: "Message from Jenkins Pipeline ${env.WORKSPACE}"
 			}
 		}
