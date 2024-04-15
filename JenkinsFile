@@ -74,7 +74,7 @@ pipeline {
 				
 				sh "pwd"
 
-				sh "/vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`"
+				sh "vendor/bin/phpcs --standard=WordPress `${env.WORKSPACE}/ups-woocommerce-shipping`"
 				
 				
 				//  script {
