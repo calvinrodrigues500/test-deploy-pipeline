@@ -74,7 +74,9 @@ pipeline {
 
 				slackSend color: "red", message: "Running WordPress Coding Standard"
 
-				slackSend color: "red" message: "PHP Version: ${ sh "php -v"}"
+				env.PHP_VERSION = sh "php -v"
+
+				slackSend color: "red" message: "PHP Version: ${env.PHP_VERSION}"
 
 
 				sh "php -v"
