@@ -69,7 +69,14 @@ pipeline {
 		stage('Testing') {
 
 			steps {
+
 				echo "I am testing the project"
+
+				slackSend color: "red", message: "Running WordPress Coding Standard"
+
+				slackSend color: "red" message: "PHP Version: ${ sh "php -v"}"
+
+
 				sh "php -v"
 				
 				sh "pwd"
