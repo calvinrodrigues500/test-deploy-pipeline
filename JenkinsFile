@@ -1,58 +1,27 @@
-// pipeline {
-// 	agent any
-	
-// 	stages {
-// 		stage('Build') {
-
-// 			steps {
-// 				echo "Cloning the Git Repo"
-
-// 				git branch: params.RELEASE_BRANCH,
-// 				credentialsId: 'cal-git-credentials',
-// 				url: params.REPO_URL
-// 			}
-// 		}
-
-// 		stage('Testing') {
-
-// 			steps {
-// 				echo "I am testing the project"
-// 			}
-// 		}
-
-// 		stage('Preparing for deploy') {
-
-// 			steps {
-				
-// 				echo "Zipping the folder";
-				
-// 				sh "pwd"
-				
-// 				sh "zip -r ph-bookings-and-appointments-plugin.zip ."
-				
-// 				echo "I am deploying the project"
-// 			}
-// 		}
-		
-// 		stage('Deploying to AWS S3') {
-		    
-// 		    steps {
-		        
-// 		        echo 'Deploying to AWS S3';
-		        
-// 		      //  sh "aws s3 cp ph-bookings-and-appointments-plugin.zip s3://ph-premium-plugins/"
-
-// 			//   sh "aws s3 presign s3://ph-premium-plugins/ph-bookings-and-appointments-plugin.zip"
-		        
-// 		        echo "Successfully uploaded the zip";
-// 		    }
-// 		}
-// 	}
-// }
-
-
 pipeline {
 	agent any
+	
+	environment {
+	    REPO = "ups-woocommerce-shipping.git"
+	    PLUGIN_FOLDER_NAME = "ups-woocommerce-shipping"
+	    PLUGIN_NAME = "WooCommerce UPS Shipping Plugin with Print Label"
+	    PHP_VERSION = sh(script: "php -v", returnStdout: true).trim()
+	    TESTING_CHANNEL = "testing"
+	    S3_BUCKET = "ph-premium-plugins"
+	   // AWS_PROFILE = "personal"
+	}
+	
+	parameters {
+        choice(
+            choices: ['qa', 'prod'],
+            description: 'Select the environment',
+            name: 'env'
+        )
+        string(
+            description: 'Enter the build version',
+            name: 'build_version'
+        )
+    }
 	
 	stages {
 		stage('Build') {
@@ -62,9 +31,19 @@ pipeline {
 
 				git branch: 'master',
 				credentialsId: 'bitbucket-credentials',
-				url: 'git@bitbucket.org:xadapter-cyd/ups-woocommerce-shipping.git'
+				url: "git@bitbucket.org:xadapter-cyd/${env.REPO}"
 			}
 		}
+		
+		stage('Copy Configurations') {
+            steps {
+                script {
+                    dir('deploy') {
+                        sh "cp ${params.env}/ph-ups-config.php ../${env.PLUGIN_FOLDER_NAME}/ph-ups-config.php"
+                    }
+                }
+            }
+        }
 
 		stage('Testing') {
 
@@ -72,12 +51,9 @@ pipeline {
 
 				echo "I am testing the project"
 
-				slackSend color: "red", message: "Running WordPress Coding Standard"
+				slackSend color: "red", message: "<!here> *Running WordPress Coding Standard*"
 
-				env.PHP_VERSION = sh "php -v"
-
-				slackSend color: "red" message: "PHP Version: ${env.PHP_VERSION}"
-
+				slackSend color: "red", message: "PHP Version: ${env.PHP_VERSION}"
 
 				sh "php -v"
 				
@@ -94,12 +70,11 @@ pipeline {
 			steps {
 				
 				echo "Zipping the folder";
+				slackSend color: "good", message: "Generating Plugin ZIP"
 				
 				// sh "pwd"
 				
-				sh "zip -r ups-woocommerce-shipping.zip ."
-				
-				// echo "I am deploying the project"
+				sh "zip -r ${env.PLUGIN_FOLDER_NAME}.zip ."
 			}
 		}
 		
@@ -108,11 +83,22 @@ pipeline {
 		    steps {
 		        
 		        echo 'Deploying to AWS S3';
+		        slackSend color: "good", message: "Uploading to AWS S3 bucket"
 		        
-		      //  sh "aws s3 cp ph-bookings-and-appointments-plugin.zip s3://ph-premium-plugins/"
+		       slackUploadFile(channel: env.TESTING_CHANNEL, filePath: "${env.PLUGIN_FOLDER_NAME}.zip", initialComment: "```${env.PLUGIN_NAME}```\n*Version: ${env.build_version}*\n<!channel>")
+		        
+		        withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'aws-credentials'
+                ]]) {
+                    
+                    sh 'aws s3 ls' 
+                    sh "aws s3 cp ${env.PLUGIN_FOLDER_NAME}.zip s3://${env.S3_BUCKET}/"
+                }
+		      //  sh "aws s3 ls"
 
-			//   sh "aws s3 presign s3://ph-premium-plugins/ph-bookings-and-appointments-plugin.zip"
-		        
 		        echo "Successfully uploaded the zip";
 		    }
 		}
